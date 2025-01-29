@@ -1,11 +1,11 @@
 """Parse data from toy bookstore but async"""
 import os.path
 from typing import Coroutine, Optional
+import asyncio
 
 import aiofiles
-import asyncio
 from bs4 import BeautifulSoup
-from aiohttp import ClientSession, ClientResponse
+from aiohttp import ClientSession
 from fake_useragent import UserAgent
 
 from sync import parse_book, write_to_json, write_to_csv

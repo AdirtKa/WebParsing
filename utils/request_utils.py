@@ -5,9 +5,9 @@ Functions:
     fetch_with_retry(input param: param type): return data type - description.
 """
 from typing import Optional
+import asyncio
 
 import aiohttp
-import asyncio
 from aiohttp import ClientSession
 
 from logger import get_logger
@@ -32,10 +32,10 @@ async def fetch_with_retry(session: ClientSession, url: str, retries: int = 3, d
                 return await response.text()  # Return the response text if successful
         except (aiohttp.ClientError, asyncio.TimeoutError) as e:
             attempt += 1
-            logger.error(f"Attempt {attempt}/{retries} failed for {url}: {e}")
+            logger.error("Attempt %s/%s failed for %s: %s", attempt, retries, url, e)
             if attempt < retries:
-                logger.info(f"Retrying in {delay} seconds...")
+                logger.info("Retrying in %s seconds...", delay)
                 await asyncio.sleep(delay)  # Wait before retrying
             else:
-                logger.error(f"Max retries reached for {url}. Giving up.")
+                logger.error("Max retries reached for %s. Giving up.", url)
                 return None  # Return None if all retries fail

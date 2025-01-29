@@ -1,10 +1,10 @@
 """Parsing hockey site."""
 from logging import Logger
 from urllib.parse import urljoin
-
-import aiohttp
 import asyncio
 
+
+import aiohttp
 from aiohttp import ClientSession
 from bs4 import BeautifulSoup
 
@@ -43,15 +43,15 @@ async def get_pages_count(session: ClientSession, per_page: int = 25) -> int:
         return int(pages_count)
 
     except asyncio.TimeoutError as e:
-        logger.error(f"Timeout error for {url}: {e}")
+        logger.error("Timeout error for %s: %s", url, e)
         return -1
 
     except aiohttp.ClientError as e:
-        logger.error(f"AIOHTTP client error for {url}: {e}")
+        logger.error("AIOHTTP client error for %s: %s", url, e)
         return -1
 
     except Exception as e:
-        logger.error(f"Unexpected error for {url}: {e}")
+        logger.error("Unexpected error for %s: %s", url, e)
         return -1
 
 
@@ -59,7 +59,7 @@ async def main():
     """Entry point."""
     async with ClientSession() as session:
         pages_count: int = await get_pages_count(session, per_page=600)
-        logger.info(f"Successfully fetched {pages_count} pages")
+        logger.info("Successfully fetched %s pages", pages_count)
         print(pages_count)
 
 
