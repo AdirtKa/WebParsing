@@ -1,0 +1,5 @@
+[MASTER]
+ignore=tests
+
+[REPORTS]
+output-format=colorized
