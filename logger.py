@@ -1,3 +1,5 @@
+"""Logger configuration."""
+
 import logging
 import sys
 import inspect
@@ -24,6 +26,12 @@ console_handler.setFormatter(logging.Formatter(LOG_FORMAT, DATE_FORMAT))
 
 # Функция для создания логгера с динамическим именем лог-файла и ротацией
 def get_logger(name: str):
+    """
+    make configured logger
+
+    :param name: logger name
+    :return: configured logger
+    """
     logger = logging.getLogger(name)  # Создаём логгер для конкретного модуля
     logger.setLevel(logging.DEBUG)  # Общий уровень логирования
 
