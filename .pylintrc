@@ -1,5 +1,9 @@
 [MASTER]
 ignore=tests
+max-line-length=120
 
 [REPORTS]
 output-format=colorized
+
+[MESSAGES CONTROL]
+disable=W0718, W0511  # Игнорирует ошибки W0511 и W0718
