@@ -14,6 +14,7 @@ from logger import get_logger
 
 logger = get_logger(__name__)
 
+
 async def fetch_with_retry(session: ClientSession, url: str, retries: int = 3, delay: int = 5) -> Optional[str]:
     """
     Perform an HTTP GET request with retries in case of failure.
