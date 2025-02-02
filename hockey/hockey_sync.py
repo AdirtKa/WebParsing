@@ -2,8 +2,9 @@
 import csv
 import json
 import requests
-from bs4 import BeautifulSoup
 from urllib.parse import urljoin
+
+from bs4 import BeautifulSoup
 
 from logger import get_logger
 
