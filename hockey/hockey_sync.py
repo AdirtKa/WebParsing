@@ -1,9 +1,9 @@
 """Parsing hockey site synchronously."""
 import csv
 import json
-import requests
 from urllib.parse import urljoin
 
+import requests
 from bs4 import BeautifulSoup
 
 from logger import get_logger
