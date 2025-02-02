@@ -1,10 +1,10 @@
 """Parsing hockey site."""
+import csv
+import json
 from logging import Logger
-from pprint import pprint
-from typing import Coroutine
+from typing import Coroutine, Any
 from urllib.parse import urljoin
 import asyncio
-
 
 import aiohttp
 from aiohttp import ClientSession
@@ -26,22 +26,22 @@ async def get_pages_count(session: ClientSession, per_page: int = 25) -> int:
     :return: number of pages
     """
     url: str = urljoin(BASE_URL, f"?per_page={per_page}")
-    try:
+    logger.info("Fetching number of pages from %s", url)
 
+    try:
         text: str = await fetch_with_retry(session, url)
 
         if not text:
+            logger.warning("Received empty response for %s", url)
             return -1
 
         soup: BeautifulSoup = BeautifulSoup(text, "lxml")
         pagination = soup.find("ul", class_="pagination")
 
-        if pagination.text == "\n" or len(pagination.find_all("li")) < 2:
-            # Пагинация не найдена или есть только одна страница
-            logger.info("Successfully fetched 1 page")
+        if not pagination or len(pagination.find_all("li")) < 2:
+            logger.info("Pagination not found, assuming 1 page")
             return 1
 
-        # Извлекаем количество страниц
         pages_count = int(pagination.find_all("li")[-2].text.strip())
         logger.info("Successfully fetched %s pages", pages_count)
         return pages_count
@@ -69,36 +69,44 @@ async def parse_page(session: ClientSession, per_page: int, page_num: int) -> li
     :return:
     """
     url: str = urljoin(BASE_URL, f"?{page_num=}&{per_page=}")
-    logger.info("Parsing page: %s", url)
-    async with session.get(url) as response:
-        text = await response.text()
+    logger.info("Parsing page %d: %s", page_num, url)
 
-    soup: BeautifulSoup = BeautifulSoup(text, "lxml")
-    soup = soup.find("table", class_="table")
-    rows: list[BeautifulSoup] = soup.find_all("tr")
-    logger.info("Found %s rows", len(rows) - 1)
+    try:
+        async with session.get(url) as response:
+            text = await response.text()
 
-    table_headers_soup: list[BeautifulSoup] = rows[0].find_all("th")
-    table_headers: list[str] = [column.text.strip() for column in table_headers_soup]
+        soup: BeautifulSoup = BeautifulSoup(text, "lxml")
+        table = soup.find("table", class_="table")
 
-    rows_without_headers: list[BeautifulSoup] = rows[1:]
-    rows_data: list[dict] = []
-    for row in rows_without_headers:
-        row_data: dict = parse_row(row, table_headers)
-        rows_data.append(row_data)
+        if not table:
+            logger.warning("No table found on page %d", page_num)
+            return []
 
-    return rows_data
+        rows: list[BeautifulSoup] = table.find_all("tr")
+        logger.info("Found %s rows on page %d", len(rows) - 1, page_num)
+
+        table_headers_soup: list[BeautifulSoup] = rows[0].find_all("th")
+        table_headers: list[str] = [column.text.strip() for column in table_headers_soup]
+
+        rows_without_headers: list[BeautifulSoup] = rows[1:]
+        rows_data: list[dict] = [parse_row(row, table_headers) for row in rows_without_headers]
+
+        logger.info("Successfully parsed page %d", page_num)
+        return rows_data
+
+    except Exception as e:
+        logger.error("Error parsing page %d: %s", page_num, e)
+        return []
 
 
 def parse_row(row: BeautifulSoup, table_headers: list[str]) -> dict[str, str]:
     """
-    Transform soup row into json format
+    Transform soup row into json format.
 
     :param row: BeautifulSoup row
     :param table_headers: list of table headers
     :return: json format row
     """
-
     columns_soup: list[BeautifulSoup] = row.find_all("td")
     columns: list[str] = [column.text.strip() for column in columns_soup]
     return dict(zip(table_headers, columns))
@@ -106,14 +114,62 @@ def parse_row(row: BeautifulSoup, table_headers: list[str]) -> dict[str, str]:
 
 async def main():
     """Entry point."""
+    logger.info("Starting scraping process")
+
     async with ClientSession() as session:
         per_page: int = 25
         pages_count: int = await get_pages_count(session, per_page=per_page)
+
+        if pages_count == -1:
+            logger.error("Failed to retrieve number of pages, exiting")
+            return
+
         tasks: list[Coroutine] = [parse_page(session, per_page, i) for i in range(1, pages_count + 1)]
+        results: tuple[Any] = await asyncio.gather(*tasks)
 
-        results: list[list[dict]] = await asyncio.gather(*tasks)
-        pprint(results)
+        all_data: list[dict] = [item for sublist in results for item in sublist]  # Flatten the list
+        logger.info("Successfully scraped %d records in total", len(all_data))
 
+        save_to_json(all_data, "hockey_data.json")
+        save_to_csv(all_data, "hockey_data.csv")
+
+    logger.info("Scraping process finished")
+
+
+def save_to_json(data: list[dict], filename: str) -> None:
+    """
+    Save parsed data to a JSON file.
+
+    :param data: List of dictionaries containing parsed data.
+    :param filename: Name of the output JSON file.
+    """
+    try:
+        with open(filename, "w", encoding="utf-8") as file:
+            json.dump(data, file, ensure_ascii=False, indent=4)
+        logger.info("Data successfully saved to %s", filename)
+    except Exception as e:
+        logger.error("Error writing to JSON file %s: %s", filename, e)
+
+
+def save_to_csv(data: list[dict], filename: str) -> None:
+    """
+    Save parsed data to a CSV file.
+
+    :param data: List of dictionaries containing parsed data.
+    :param filename: Name of the output CSV file.
+    """
+    if not data:
+        logger.warning("No data to save to CSV")
+        return
+
+    try:
+        with open(filename, "w", newline="", encoding="utf-8") as file:
+            writer = csv.DictWriter(file, fieldnames=data[0].keys())
+            writer.writeheader()
+            writer.writerows(data)
+        logger.info("Data successfully saved to %s", filename)
+    except Exception as e:
+        logger.error("Error writing to CSV file %s: %s", filename, e)
 
 
 if __name__ == '__main__':
