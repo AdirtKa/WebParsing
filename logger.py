@@ -11,7 +11,7 @@ LOG_DIR = Path(__file__).parent / "logs"
 LOG_DIR.mkdir(exist_ok=True)  # Создаём папку logs, если её нет
 
 # Форматирование логов
-LOG_FORMAT = "%(asctime)s - %(levelname)s - %(name)s - %(message)s"
+LOG_FORMAT = "%(asctime)s - %(levelname)s  - %(message)s"
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 # Параметры ротации логов
