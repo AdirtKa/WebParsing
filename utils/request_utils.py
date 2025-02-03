@@ -4,18 +4,17 @@ Some useful functions.
 Functions:
     fetch_with_retry(input param: param type): return data type - description.
 """
-from typing import Optional
 import asyncio
 
 import aiohttp
-from aiohttp import ClientSession
+from aiohttp import ClientSession, ClientResponse
 
 from logger import get_logger
 
 logger = get_logger(__name__)
 
 
-async def fetch_with_retry(session: ClientSession, url: str, retries: int = 3, delay: int = 5) -> Optional[str]:
+async def fetch_with_retry(session: ClientSession, url: str, retries: int = 3, delay: int = 5) -> ClientResponse:
     """
     Perform an HTTP GET request with retries in case of failure.
 
@@ -28,9 +27,10 @@ async def fetch_with_retry(session: ClientSession, url: str, retries: int = 3, d
     attempt: int = 0
     while attempt < retries:
         try:
-            async with session.get(url, timeout=aiohttp.ClientTimeout(total=30)) as response:
-                response.raise_for_status()  # Check for HTTP errors (e.g. 404, 500)
-                return await response.text()  # Return the response text if successful
+            response = await session.get(url, timeout=aiohttp.ClientTimeout(total=30))
+            response.raise_for_status()  # Check for HTTP errors (e.g. 404, 500)
+            return response  # Return the response text if successful
+
         except (aiohttp.ClientError, asyncio.TimeoutError) as e:
             attempt += 1
             logger.error("Attempt %s/%s failed for %s: %s", attempt, retries, url, e)

@@ -1,12 +1,12 @@
 """Parsing hockey site synchronously."""
-import csv
-import json
 from urllib.parse import urljoin
 
 import requests
 from bs4 import BeautifulSoup
 
 from logger import get_logger
+from utils.request_utils import fetch_with_retry
+from utils.file_utils import save_to_json, save_to_csv
 
 logger = get_logger(__name__)
 BASE_URL = "https://www.scrapethissite.com/pages/forms/"
@@ -113,36 +113,6 @@ def main():
     save_to_csv(all_data, "sync_hockey_data.csv")
 
     logger.info("Scraping process finished")
-
-
-def save_to_json(data, filename):
-    """
-    Save parsed data to a JSON file.
-    """
-    try:
-        with open(filename, "w", encoding="utf-8") as file:
-            json.dump(data, file, ensure_ascii=False, indent=4)
-        logger.info("Data successfully saved to %s", filename)
-    except Exception as e:
-        logger.error("Error writing to JSON file %s: %s", filename, e)
-
-
-def save_to_csv(data, filename):
-    """
-    Save parsed data to a CSV file.
-    """
-    if not data:
-        logger.warning("No data to save to CSV")
-        return
-
-    try:
-        with open(filename, "w", newline="", encoding="utf-8") as file:
-            writer = csv.DictWriter(file, fieldnames=data[0].keys())
-            writer.writeheader()
-            writer.writerows(data)
-        logger.info("Data successfully saved to %s", filename)
-    except Exception as e:
-        logger.error("Error writing to CSV file %s: %s", filename, e)
 
 
 if __name__ == '__main__':

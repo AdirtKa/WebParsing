@@ -1,6 +1,4 @@
 """Parsing hockey site."""
-import csv
-import json
 from logging import Logger
 from typing import Coroutine, Any
 from urllib.parse import urljoin
@@ -12,6 +10,7 @@ from bs4 import BeautifulSoup
 
 from logger import get_logger
 from utils.request_utils import fetch_with_retry
+from utils.file_utils import save_to_json, save_to_csv
 
 logger: Logger = get_logger(__name__)
 BASE_URL: str = "https://www.scrapethissite.com/pages/forms/"
@@ -29,7 +28,9 @@ async def get_pages_count(session: ClientSession, per_page: int = 25) -> int:
     logger.info("Fetching number of pages from %s", url)
 
     try:
-        text: str = await fetch_with_retry(session, url)
+        response = await fetch_with_retry(session, url)
+        text: str = await response.text()
+        response.close()
 
         if not text:
             logger.warning("Received empty response for %s", url)
@@ -134,42 +135,6 @@ async def main():
         save_to_csv(all_data, "hockey_data.csv")
 
     logger.info("Scraping process finished")
-
-
-def save_to_json(data: list[dict], filename: str) -> None:
-    """
-    Save parsed data to a JSON file.
-
-    :param data: List of dictionaries containing parsed data.
-    :param filename: Name of the output JSON file.
-    """
-    try:
-        with open(filename, "w", encoding="utf-8") as file:
-            json.dump(data, file, ensure_ascii=False, indent=4)
-        logger.info("Data successfully saved to %s", filename)
-    except Exception as e:
-        logger.error("Error writing to JSON file %s: %s", filename, e)
-
-
-def save_to_csv(data: list[dict], filename: str) -> None:
-    """
-    Save parsed data to a CSV file.
-
-    :param data: List of dictionaries containing parsed data.
-    :param filename: Name of the output CSV file.
-    """
-    if not data:
-        logger.warning("No data to save to CSV")
-        return
-
-    try:
-        with open(filename, "w", newline="", encoding="utf-8") as file:
-            writer = csv.DictWriter(file, fieldnames=data[0].keys())
-            writer.writeheader()
-            writer.writerows(data)
-        logger.info("Data successfully saved to %s", filename)
-    except Exception as e:
-        logger.error("Error writing to CSV file %s: %s", filename, e)
 
 
 if __name__ == '__main__':

@@ -50,6 +50,7 @@ def read_html_from_file(filename: str) -> str:
     with open(filename, "r", encoding="utf-8") as f:
         return f.read()
 
+
 def parse_book(soup: BeautifulSoup) -> dict:
     """
     Parse book from html
@@ -68,6 +69,7 @@ def parse_book(soup: BeautifulSoup) -> dict:
         "price": main_info.find("p", class_="price_color").text.strip(),
         "availability": main_info.find("p", class_="instock availability").text.strip(),
     }
+
 
 def write_to_json(data: list[dict] | dict, filename: str = "books.json") -> None:
     """
@@ -97,7 +99,7 @@ def write_to_csv(data: list[dict] | dict, filename: str = "books.csv") -> None:
         dict_writer.writerows(data)
 
 
-def  main():
+def main():
     """Entry point."""
 
     books_data: list[dict[str, str]] = []
@@ -116,7 +118,7 @@ def  main():
         os.makedirs(os.path.join("source", "books", f"page{i}"), exist_ok=True)
         for image in images:
             book_name: str = image.find("a").get("href").rstrip("/index.html")
-            filename: str = os.path.join("source", "books", f"page{i}" , book_name + ".html")
+            filename: str = os.path.join("source", "books", f"page{i}", book_name + ".html")
 
             if not os.path.isfile(filename):
                 book_link: str = BASE_URL + "catalogue/" + book_name
@@ -124,13 +126,11 @@ def  main():
                 response: Response = get(book_link, timeout=10)
                 write_html_to_file(response.text, filename)
 
-
             page: str = read_html_from_file(filename)
             soup: BeautifulSoup = BeautifulSoup(page, "lxml")
             book_data: dict[str, str] = parse_book(soup)
 
             books_data.append(book_data)
-
 
     write_to_json(books_data)
     write_to_csv(books_data)
