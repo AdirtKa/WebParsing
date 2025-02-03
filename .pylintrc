@@ -6,4 +6,4 @@ max-line-length=120
 output-format=colorized
 
 [MESSAGES CONTROL]
-disable=W0718, W0511, R0801  # Игнорирует ошибки W0511 и W0718
+disable=W0718, W0511, R0801, E0401  # Игнорирует ошибки W0511 и W0718
