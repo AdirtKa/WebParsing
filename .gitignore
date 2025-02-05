@@ -16,5 +16,6 @@
 *.log
 *.csv
 *.json
+*.jpg
 
 **/__pycache__/
