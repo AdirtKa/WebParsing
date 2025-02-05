@@ -1,4 +1,13 @@
-"""Utils for file manipulation"""
+"""
+Utils for file manipulation.
+
+This module provides utility functions for saving parsed data to JSON and CSV files.
+
+Functions:
+- save_to_json(data: list[dict], filename: str) -> None: Saves a list of dictionaries to a JSON file.
+- save_to_csv(data: list[dict], filename: str) -> None: Saves a list of dictionaries to a CSV file.
+"""
+
 import json
 import csv
 
