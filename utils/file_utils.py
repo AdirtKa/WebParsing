@@ -6,10 +6,13 @@ This module provides utility functions for saving parsed data to JSON and CSV fi
 Functions:
 - save_to_json(data: list[dict], filename: str) -> None: Saves a list of dictionaries to a JSON file.
 - save_to_csv(data: list[dict], filename: str) -> None: Saves a list of dictionaries to a CSV file.
+- save_image(image_bytes: bytes, filename: str) -> None: synchronously saves binary image data to a JPG file.
 """
 
 import json
 import csv
+
+import aiofiles
 
 from logger import get_logger
 
@@ -51,3 +54,18 @@ def save_to_csv(data: list[dict], filename: str) -> None:
         logger.info("Data successfully saved to %s", filename)
     except Exception as e:
         logger.error("Error writing to CSV file %s: %s", filename, e)
+
+
+async def save_image(image_bytes: bytes, filename: str) -> None:
+    """
+    Asynchronously save image bytes to a JPG file.
+
+    :param image_bytes: Binary image data.
+    :param filename: Output file name (should include .jpg extension).
+    """
+    try:
+        async with aiofiles.open(filename, "wb") as file:
+            await file.write(image_bytes)
+        print(f"Image successfully saved to {filename}")
+    except Exception as e:
+        print(f"Error saving image {filename}: {e}")
