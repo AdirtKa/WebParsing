@@ -58,7 +58,7 @@ def save_to_csv(data: list[dict], filename: str) -> None:
 
 async def save_image(image_bytes: bytes, filename: str) -> None:
     """
-    Asynchronously save image bytes to a JPG file.
+    Asynchronously save image bytes to a file.
 
     :param image_bytes: Binary image data.
     :param filename: Output file name (should include .jpg extension).
