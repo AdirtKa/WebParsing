@@ -25,7 +25,7 @@ async def get_turtle_links(session: aiohttp.ClientSession) -> list[str]:
     """
     turtle_links: list[str] = []
 
-    logger.info(f"Getting turtle links from {BASE_URL}")
+    logger.info("Getting turtle links from %s", BASE_URL)
 
     response: aiohttp.ClientResponse = await fetch_with_retry(session, BASE_URL)
     text: str = await response.text()
@@ -33,7 +33,7 @@ async def get_turtle_links(session: aiohttp.ClientSession) -> list[str]:
 
     soup: BeautifulSoup = BeautifulSoup(text, "lxml")
     turtle_buttons: list[BeautifulSoup] = soup.find_all("a", class_="btn btn-default btn-xs")
-    logger.info(f"Found {len(turtle_buttons)} turtle links")
+    logger.info("Found %s turtle links", len(turtle_buttons))
     for turtle_button in turtle_buttons:
         turtle_links.append(urljoin(BASE_URL, turtle_button["href"]))
 
